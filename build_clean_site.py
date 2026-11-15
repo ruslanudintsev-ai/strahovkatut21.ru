@@ -204,7 +204,34 @@ def main():
         if not entry:
             entry_html = f"<h1>{h1_text}</h1><p>Материал готовится к публикации.</p>"
         else:
-            entry_html = str(entry)
+            # Strip all third-party spam / scraper links
+            for a_tag in entry.find_all("a"):
+                href = a_tag.get("href", "")
+                if "polishelp.ru" in href or href.startswith("/") or href.startswith("#"):
+                    continue
+                if "youtube.com" in href or "youtu.be" in href or "dzen.ru" in href:
+                    a_tag.decompose()
+                else:
+                    a_tag.unwrap()
+
+            # Contextual PBN injection for specific target articles
+            raw_entry_str = str(entry)
+            if slug == "kak-oformit-osago-na-avtomobil":
+                if "polishelp.ru" not in raw_entry_str:
+                    raw_entry_str = raw_entry_str.replace(
+                        "проверке полиса",
+                        '<a href="https://polishelp.ru/osago/check/" target="_blank" rel="noopener" style="color: #2563eb; font-weight: 600; text-decoration: underline;">проверке полиса ОСАГО по единой базе РСА</a>'
+                    ).replace(
+                        "электронного полиса",
+                        '<a href="https://polishelp.ru/osago/check/" target="_blank" rel="noopener" style="color: #2563eb; font-weight: 600; text-decoration: underline;">электронного полиса ОСАГО</a>'
+                    )
+            elif slug in ["imushhestvennyj-nalogovyj-vychet", "nalog-s-prodazhi-doma"]:
+                if "polishelp.ru" not in raw_entry_str:
+                    raw_entry_str = raw_entry_str.replace(
+                        "ипотеке",
+                        '<a href="https://polishelp.ru/ipoteka/vtb/" target="_blank" rel="noopener" style="color: #2563eb; font-weight: 600; text-decoration: underline;">страховании ипотеки ВТБ</a>'
+                    )
+            entry_html = raw_entry_str
 
         # Excerpt for catalogue
         p_tag = art_soup.find("p")
